@@ -1659,7 +1659,7 @@ static int responseStrings(Parcel &p, void *response, size_t responselen, bool n
         char **p_cur = (char **) response;
 
         numStrings = responselen / sizeof(char *);
-#ifdef NEW_LIBRIL_HTC
+#ifdef RIL_FIVE_SEARCH_RESPONSES
         if (network_search == true) {
             // we only want four entries for each network
             p.writeInt32 (numStrings - (numStrings / 5));
@@ -1674,7 +1674,7 @@ static int responseStrings(Parcel &p, void *response, size_t responselen, bool n
         /* each string*/
         startResponse;
         for (int i = 0 ; i < numStrings ; i++) {
-#ifdef NEW_LIBRIL_HTC
+#ifdef RIL_FIVE_SEARCH_RESPONSES
             sCount++;
             // ignore the fifth string that is returned by newer HTC libhtc_ril.so.
             if (network_search == true && sCount % 5 == 0) {
@@ -3180,27 +3180,26 @@ eventLoop(void *param) {
 
 extern "C" void
 RIL_startEventLoop(void) {
-    int ret;
-    pthread_attr_t attr;
-
     /* spin up eventLoop thread and wait for it to get started */
     s_started = 0;
     pthread_mutex_lock(&s_startupMutex);
 
-    pthread_attr_init (&attr);
+    pthread_attr_t attr;
+    pthread_attr_init(&attr);
     pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED);
-    ret = pthread_create(&s_tid_dispatch, &attr, eventLoop, NULL);
+
+    int result = pthread_create(&s_tid_dispatch, &attr, eventLoop, NULL);
+    if (result != 0) {
+        RLOGE("Failed to create dispatch thread: %s", strerror(result));
+        goto done;
+    }
 
     while (s_started == 0) {
         pthread_cond_wait(&s_startupCond, &s_startupMutex);
     }
 
+done:
     pthread_mutex_unlock(&s_startupMutex);
-
-    if (ret < 0) {
-        RLOGE("Failed to create dispatch thread errno:%d", errno);
-        return;
-    }
 }
 
 // Used for testing purpose only.
