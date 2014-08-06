@@ -12,20 +12,16 @@ LOCAL_SRC_FILES:= \
     ril_event.cpp
 
 LOCAL_SHARED_LIBRARIES := \
+    liblog \
     libutils \
     libbinder \
     libcutils \
-    libhardware_legacy \
-    librilutils
+    libhardware_legacy
 
 LOCAL_CFLAGS :=
 
 ifeq ($(BOARD_RIL_NO_CELLINFOLIST),true)
 LOCAL_CFLAGS += -DRIL_NO_CELL_INFO_LIST
-endif
-
-ifeq ($(BOARD_RIL_FIVE_SEARCH_RESPONSES),true)
-LOCAL_CFLAGS += -DRIL_FIVE_SEARCH_RESPONSES
 endif
 
 LOCAL_MODULE:= libril
